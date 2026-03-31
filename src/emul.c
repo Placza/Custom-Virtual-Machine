@@ -4,6 +4,8 @@
 
 
 
+typedef uint16_t word;
+
 enum
 {
   R_PC = 0,   // program counter
@@ -18,15 +20,15 @@ int running = 1;
 //=======================================================
 
 
-uint16_t stack[128] = {0};            // stack register
-uint16_t registers[R_COUNT] = {0};    // static registers 
+word stack[128] = {0};            // stack register
+word registers[R_COUNT] = {0};    // static registers 
 
 
 //=======================================================
 
 
-uint16_t memory[65535] = {0};         // memory
-uint16_t proc = 0;                    // programator counter
+word memory[65535] = {0};         // memory
+word proc = 0;                    // programator counter
 
 
 //=======================================================
@@ -59,7 +61,7 @@ enum
 
 
 int fetch_instruction();
-void evaluate_instruction(int i);
+void evaluate_instruction(int i, int* cycles);
 void print_machine_state();
 void init_machine();
 
@@ -69,14 +71,15 @@ int main(void)
 {
 
   init_machine();
+  int cycles = 0;
 
   while (running)
   {
+    cycles++;
     print_machine_state();
     int i = fetch_instruction();
-    evaluate_instruction(i);
-    registers[R_PC]++;
-    usleep(1*1000*1000);
+    evaluate_instruction(i, &cycles);
+    usleep(1);
   }
   return 0;
 }
@@ -92,22 +95,37 @@ int fetch_instruction()
 
 
 
-void evaluate_instruction(int i)
+int wait(int* cycles, int n)
+{
+  if (*cycles == n)
+  {
+    *cycles = 0;
+    return 1;
+  }
+  return 0;
+}
+
+
+void evaluate_instruction(int i, int* cycles)
 {
   switch (i) 
   {
     case I_PSH:
       {
-        uint16_t data = memory[++registers[R_PC]];
+        if (!wait(cycles, 1)) break;
+        word data = memory[++registers[R_PC]];
         stack[registers[R_SP]] = data;
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       }
 
     case I_POP:
       {
+        if (!wait(cycles, 1)) break;
         registers[R_SP]--;
         registers[R_PV] = stack[registers[R_SP]];
+        registers[R_PC]++;
         break;
       }
 
@@ -119,113 +137,137 @@ void evaluate_instruction(int i)
 
     case I_ADD:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b + a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b + a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       } 
 
     case I_SUB:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b - a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b - a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       }
 
     case I_MUL:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b * a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b * a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       }
 
     case I_AND:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b & a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b & a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       }
 
     case I_OR:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b | a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b | a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       }
     
     case I_XOR:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b ^ a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b ^ a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       }
 
     case I_SFL:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b << a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b << a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
+
         break;
       }
     
     case I_SFR:
       {
-        uint16_t a = stack[--registers[R_SP]];
-        uint16_t b = stack[--registers[R_SP]];
-        uint16_t res = b >> a;
+        if (!wait(cycles, 4)) break;
+        word a = stack[--registers[R_SP]];
+        word b = stack[--registers[R_SP]];
+        word res = b >> a;
         stack[registers[R_SP]] = res;
         registers[R_SP]++;
+        registers[R_PC]++;
+
         break;
       }
 
     case I_JMP:
       {
-        uint16_t dist = memory[++registers[R_PC]];
+        if (!wait(cycles, 2)) break;
+        word dist = memory[++registers[R_PC]];
         registers[R_PC] += dist;
         break;
       }
 
     case I_CJMP:
       {
+        if (!wait(cycles, 4)) break;
         if (stack[registers[R_SP] - 1] == 0) break;
         registers[R_SP]--;
-        uint16_t dist = memory[++registers[R_PC]];
+        word dist = memory[++registers[R_PC]];
         registers[R_PC] += dist;
         break;
       }
 
     case I_LDR:
       {
-        uint16_t addr = stack[--registers[R_SP]];
+        if (!wait(cycles, 100)) break;
+        word addr = stack[--registers[R_SP]];
         stack[registers[R_SP]] = memory[addr];
         registers[R_SP]++;
+        registers[R_PC]++;
         break;
       }
 
     case I_STR:
       {
-        uint16_t addr = stack[--registers[R_SP]];
-        uint16_t data = stack[--registers[R_SP]];
+        if (!wait(cycles, 100)) break;
+        word addr = stack[--registers[R_SP]];
+        word data = stack[--registers[R_SP]];
         memory[addr] = data;
+        registers[R_PC]++;
         break;
       }
   }
@@ -239,7 +281,13 @@ void print_machine_state()
   {
     printf("%d ", stack[i]);
   }
-  printf(" PC: %d\n", registers[R_PC]);
+  printf(" PC: %d SP: %d\n", registers[R_PC], registers[R_SP]);
+
+  for (int i = 100; i < 150; i++)
+  {
+    printf("%d ", memory[i]);
+  }
+  printf("\n");
 }
 
 
@@ -256,10 +304,58 @@ void init_machine()
 {
   
   add_instruction(I_PSH);
+  add_instruction(101);
+  add_instruction(I_PSH);
+  add_instruction(100);
+  add_instruction(I_STR);
+
+  add_instruction(I_PSH);
   add_instruction(1);
   add_instruction(I_PSH);
-  add_instruction(0);
+  add_instruction(101);
+  add_instruction(I_STR);
 
+  add_instruction(I_PSH);
+  add_instruction(1);
+  add_instruction(I_PSH);
+  add_instruction(102);
+  add_instruction(I_STR);
+
+
+  add_instruction(I_PSH);
+  add_instruction(100);
+  add_instruction(I_LDR);
+  add_instruction(I_LDR);
+
+  add_instruction(I_PSH);
+  add_instruction(100);
+  add_instruction(I_LDR);
+  add_instruction(I_PSH);
+  add_instruction(1);
+  add_instruction(I_ADD);
+  add_instruction(I_LDR);
+
+  add_instruction(I_ADD);
+  add_instruction(I_PSH);
+  add_instruction(100);
+  add_instruction(I_LDR);
+  add_instruction(I_PSH);
+  add_instruction(2);
+  add_instruction(I_ADD);
+  add_instruction(I_STR);
+
+  add_instruction(I_PSH);
+  add_instruction(100);
+  add_instruction(I_LDR);
+  add_instruction(I_PSH);
+  add_instruction(1);
+  add_instruction(I_ADD);
+  add_instruction(I_PSH);
+  add_instruction(100);
+  add_instruction(I_STR);
+
+  add_instruction(I_JMP);
+  add_instruction(-29);
 
   add_instruction(I_HLT);
 }
