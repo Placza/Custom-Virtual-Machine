@@ -1,0 +1,49 @@
+    # Load the array pointer
+    push 101
+    push 100
+    str
+
+    # Load the first value
+    push 1
+    push 101
+    str
+
+    # Load the second value
+    push 1
+    push 102
+    str
+
+    
+loop:
+    # Read into the stack the first element
+    push 100 
+    ldr
+    ldr
+
+    # Read into the stack the second element
+    push 100
+    ldr
+    push 1
+    add
+    ldr
+
+    # Sum the values and store the result into memory
+    add
+    push 100
+    ldr
+    push 2
+    add
+    str
+
+    # Increment the array pointer by one
+    push 100
+    ldr
+    push 1
+    add
+    push 100
+    str
+
+    # Loop back
+    jmp loop
+
+    halt
