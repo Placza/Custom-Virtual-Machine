@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -61,7 +62,7 @@ enum
 
 
 int fetch_instruction();
-void evaluate_instruction(int i, int* cycles);
+void evaluate_instruction(word i, int* cycles);
 void print_machine_state();
 void init_machine();
 
@@ -77,9 +78,9 @@ int main(void)
   {
     cycles++;
     print_machine_state();
-    int i = fetch_instruction();
+    word i = fetch_instruction();
     evaluate_instruction(i, &cycles);
-    usleep(1);
+    usleep(100000);
   }
   return 0;
 }
@@ -106,7 +107,7 @@ int wait(int* cycles, int n)
 }
 
 
-void evaluate_instruction(int i, int* cycles)
+void evaluate_instruction(word i, int* cycles)
 {
   switch (i) 
   {
@@ -253,7 +254,7 @@ void evaluate_instruction(int i, int* cycles)
 
     case I_LDR:
       {
-        if (!wait(cycles, 100)) break;
+        if (!wait(cycles, 5)) break;
         word addr = stack[--registers[R_SP]];
         stack[registers[R_SP]] = memory[addr];
         registers[R_SP]++;
@@ -263,7 +264,7 @@ void evaluate_instruction(int i, int* cycles)
 
     case I_STR:
       {
-        if (!wait(cycles, 100)) break;
+        if (!wait(cycles, 5)) break;
         word addr = stack[--registers[R_SP]];
         word data = stack[--registers[R_SP]];
         memory[addr] = data;
@@ -302,60 +303,26 @@ void add_instruction(int i)
 
 void init_machine()
 {
+  FILE *ptr;
   
-  add_instruction(I_PSH);
+  ptr = fopen("../assembler/code.bin", "rb");
+  
+  fread(memory, sizeof(memory), 1, ptr);
+
+  for (int i = 0; i < 100; i++)
+  {
+    printf("%u ", memory[i]);
+  }
+  printf("\n");
+
+  fclose(ptr);
+
+  /*add_instruction(I_PSH);
   add_instruction(101);
   add_instruction(I_PSH);
   add_instruction(100);
   add_instruction(I_STR);
 
   add_instruction(I_PSH);
-  add_instruction(1);
-  add_instruction(I_PSH);
-  add_instruction(101);
-  add_instruction(I_STR);
-
-  add_instruction(I_PSH);
-  add_instruction(1);
-  add_instruction(I_PSH);
-  add_instruction(102);
-  add_instruction(I_STR);
-
-
-  add_instruction(I_PSH);
-  add_instruction(100);
-  add_instruction(I_LDR);
-  add_instruction(I_LDR);
-
-  add_instruction(I_PSH);
-  add_instruction(100);
-  add_instruction(I_LDR);
-  add_instruction(I_PSH);
-  add_instruction(1);
-  add_instruction(I_ADD);
-  add_instruction(I_LDR);
-
-  add_instruction(I_ADD);
-  add_instruction(I_PSH);
-  add_instruction(100);
-  add_instruction(I_LDR);
-  add_instruction(I_PSH);
-  add_instruction(2);
-  add_instruction(I_ADD);
-  add_instruction(I_STR);
-
-  add_instruction(I_PSH);
-  add_instruction(100);
-  add_instruction(I_LDR);
-  add_instruction(I_PSH);
-  add_instruction(1);
-  add_instruction(I_ADD);
-  add_instruction(I_PSH);
-  add_instruction(100);
-  add_instruction(I_STR);
-
-  add_instruction(I_JMP);
-  add_instruction(-29);
-
-  add_instruction(I_HLT);
+  add_instruction(1;*/
 }
